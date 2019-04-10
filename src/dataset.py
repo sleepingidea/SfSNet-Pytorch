@@ -134,6 +134,29 @@ def prepare_processed_dataset(save_dir, size=128):
     return train_dset, test_dset
 
 
+class LightTest(SfSNetDataset):
+    def __init__(self, dataset_dir, size=128):
+        dataset_ids = sorted(os.listdir(dataset_dir))
+        super(LightTest, self).__init__(dataset_dir, dataset_ids, size)
+
+    def __getitem__(self, item):
+        record = self._records[item]
+        fc_light = np.array(np.loadtxt(join(self._dataset_dir, record['light'])), dtype=np.float32)
+        count = np.sum((np.abs(fc_light) > 1))
+        return count
+
+
+if __name__ == '__main__':
+    from config import SFSNET_DATASET_DIR
+    lt = LightTest(SFSNET_DATASET_DIR)
+    dl = DataLoader(lt, 64, num_workers=16)
+    count = 0
+    for c in dl:
+        count += np.sum(c.cpu().numpy())
+        print(count)
+    print(count)
+    exit()
+
 if __name__ == '__main__':
     from config import SFSNET_DATASET_DIR, SFSNET_DATASET_DIR_NPY
     train_dset, test_dset = prepare_dataset(SFSNET_DATASET_DIR)
