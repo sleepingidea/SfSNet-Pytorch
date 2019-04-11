@@ -105,7 +105,7 @@ if __name__ == '__main__':
     image_list = glob.glob(os.path.join(PROJECT_DIR, 'Images/*.*'))
 
     # define sfsnet tool
-    ss = SfSNetEval('data/temp_2019.04.10_09.49.20.pth', LANDMARK_PATH)
+    ss = SfSNetEval('data/temp_2019.04.10_18.34.33.pth', LANDMARK_PATH)
 
     for image_name in image_list:
         # read image
