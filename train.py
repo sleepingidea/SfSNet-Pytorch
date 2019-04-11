@@ -29,11 +29,15 @@ def weight_init(layer):
 
 def load_train_config():
     try:
-        with open(os.path.join(PROJECT_DIR, 'data/train.config.pkl', 'r')) as f:
+        with open(os.path.join(PROJECT_DIR, 'data/train.config.pkl'), 'r') as f:
             train_config = pickle.load(f, encoding='latin1')
             return train_config
+    except TypeError as e:
+        with open(os.path.join(PROJECT_DIR, 'data/train.config.pkl'), 'r') as f:
+            train_config = pickle.load(f)
+            return train_config
     except IOError as e:
-        train_config = {'epoch': 0, 'learning_rate': 0.01}
+        train_config = {'epoch': 0, 'learning_rate': 0.01, 'weight': ''}
         return train_config
 
 
@@ -44,6 +48,7 @@ def train():
     t = time.strftime('%Y.%m.%d_%H.%M.%S', time.localtime(time.time()))
     sta = Statistic('data/temp_%s.pth.csv' % t, True, 'epoch', 'step', 'total_step', 'learning_rate', 'loss')
     train_config = load_train_config()
+    print(train_config)
 
     # define batch size
     batch_size = 32
@@ -53,8 +58,9 @@ def train():
     # init weights
     model.apply(weight_init)
     # load last trained weight
-    with open('data/temp_2019.04.10_18.34.33.pth', 'r') as f:
-        model.load_state_dict(torch.load(f))
+    if train_config['weight'] != '':
+        with open(train_config['weight'], 'r') as f:
+            model.load_state_dict(torch.load(f))
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
         # dim = 0 [62, ...] -> [32, ...], [32, ...] on 2 GPUs
@@ -157,7 +163,7 @@ def train():
     except KeyboardInterrupt as e:
         print("用户主动退出...")
         pass
-    except:
+    except IOError as r:
         print("其它异常...")
         raise
     finally:
@@ -169,7 +175,8 @@ def train():
             else:
                 torch.save(model.cpu().state_dict(), f)
         # save train config
-        with open(os.path.join(PROJECT_DIR, 'data/train.config.pkl', 'w')) as f:
+        train_config['weight'] = 'data/temp_%s.pth' % t
+        with open(os.path.join(PROJECT_DIR, 'data/train.config.pkl'), 'w') as f:
             pickle.dump(train_config, f)
 
 
